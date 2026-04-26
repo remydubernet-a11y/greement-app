@@ -281,6 +281,86 @@ export const storage = {
         historique: 'Remâtage Outremer 5X effectué. Litige client : drisse housse génois non attachée. Équipe affirme que ce n\'était pas dans le brief. Marc en charge de la résolution.',
         createdAt: '2026-04-26T09:00:00Z',
         updatedAt: '2026-04-26T09:00:00Z'
+      },
+      {
+        id: 'allardet',
+        nom: 'Allardet-Servent Jean-Paul',
+        bateau: 'First 30',
+        lieu: 'Port Camargue',
+        type: 'rematage',
+        statut: 'attente_assurance',
+        couleur: 'red',
+        mails: [
+          {
+            id: '1',
+            expediteur: 'Jean-Paul Allardet-Servent',
+            sujet: 'Délai remplacement mât + points techniques',
+            apercu: 'Urgent : courses 100 milles prévues 1er et 8 mai. Demande activation procédure, ne veut pas être pénalisé par le rapport assurance du sous-traitant. Problèmes : pataras accroche GV, feux de mât mal câblés.',
+            date: '2026-04-26T10:00:00Z',
+            nonLu: true
+          }
+        ],
+        notes: [
+          {
+            id: '1',
+            date: '2026-03-04',
+            titre: 'Sinistre déclaré',
+            texte: 'Problème signalé à Mme Bonnefoy le 4 mars. Sous-traitant électricien a fait un mauvais trou lors du remâtage. Nécessite remplacement complet du mât.'
+          },
+          {
+            id: '2',
+            date: '2026-04-26',
+            titre: 'Position client',
+            texte: 'Client très pressé : course 100 milles le 1er mai, puis 8 mai, puis croisière 1 mois. Exige que le sous-traitant assume financièrement sans attendre l\'assurance. Ne veut pas être pénalisé par les délais administratifs. 20 jours déjà perdus depuis le 4 mars.'
+          },
+          {
+            id: '3',
+            date: '2026-04-26',
+            titre: 'Points techniques à régler',
+            texte: '1) Latte de pataras : renforcer/remplacer la latte (plus raide) + raccourcir le bout de poulie car accroche la chute de GV lors des virement de bord. 2) Feux de mât : problème de câblage - le feu de hune éteint le tricolore et allume le mouillage 360°, rendant la navigation impossible. Vérifier branchements avant démâtage ou remettre feux rouge/vert d\'origine.'
+          }
+        ],
+        taches: [
+          {
+            id: '1',
+            texte: 'Obtenir date exacte de livraison du nouveau mât auprès du sous-traitant',
+            meta: 'URGENT : client a course le 1er mai (dans 5 jours)',
+            fait: false,
+            priorite: 'haute'
+          },
+          {
+            id: '2',
+            texte: 'Pousser validation assurance électricien pour débloquer commande mât',
+            meta: 'Client demande que sous-traitant avance les fonds si besoin',
+            fait: false,
+            priorite: 'haute'
+          },
+          {
+            id: '3',
+            texte: 'Prévoir remplacement/renforcement latte de pataras lors du remâtage',
+            meta: 'Latte plus raide + raccourcir bout de poulie',
+            fait: false,
+            priorite: 'normal'
+          },
+          {
+            id: '4',
+            texte: 'Vérifier câblage feux de mât AVANT démâtage',
+            meta: 'Feu de hune éteint le tricolore et allume le mouillage - croisement de fils ?',
+            fait: false,
+            priorite: 'normal'
+          },
+          {
+            id: '5',
+            texte: 'Répondre au client sur délai de remplacement',
+            meta: 'Mail urgent reçu le 26/04 - réponse attendue rapidement',
+            fait: false,
+            priorite: 'haute'
+          }
+        ],
+        devis: [],
+        historique: 'Remâtage First 30 à Port Camargue. Sinistre le 4 mars : sous-traitant électricien a fait un mauvais trou, nécessite remplacement complet du mât. Attente validation assurance pour passer commande nouveau mât. Client sous pression (courses 1er et 8 mai + croisière). 20 jours de retard déjà accumulés.',
+        createdAt: '2026-03-04T10:00:00Z',
+        updatedAt: '2026-04-26T10:00:00Z'
       }
     ];
   }

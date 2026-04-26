@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
 import Dossier from './components/Dossier'
 import Planning from './components/Planning'
+import ChatPanel from './components/ChatPanel'
 import './App.css'
 
 function App() {
@@ -112,6 +113,12 @@ function App() {
           )}
         </main>
       </div>
+      
+      <ChatPanel 
+        dossiers={dossiers}
+        onUpdateDossier={handleUpdateDossier}
+        onAddDossier={handleAddDossier}
+      />
     </div>
   )
 }
