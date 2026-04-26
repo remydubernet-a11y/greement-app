@@ -1,0 +1,32 @@
+.dossier-view { max-width: 1200px; margin: 0 auto; }
+.dossier-header-section { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.dossier-title-section { flex: 1; }
+.dossier-title { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.dossier-subtitle { font-size: 15px; color: var(--text-secondary); }
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+.tab { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; background: transparent; color: var(--text-secondary); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; transition: all 0.2s ease; }
+.tab:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.tab.active { background: var(--bg-secondary); color: var(--accent); border-bottom: 2px solid var(--accent); }
+.tab-content-wrapper { animation: fadeIn 0.2s ease-out; }
+.mails-list, .notes-list, .taches-list, .devis-list { display: flex; flex-direction: column; gap: 12px; }
+.mail-item, .note-item, .devis-item { padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); transition: all 0.2s ease; }
+.mail-item:hover, .note-item:hover, .devis-item:hover { border-color: var(--accent); background: var(--bg-tertiary); }
+.mail-header, .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.mail-sender, .note-titre { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.mail-date, .note-date { font-size: 12px; color: var(--text-tertiary); }
+.mail-subject { font-size: 14px; color: var(--text-secondary); margin-bottom: 6px; }
+.mail-preview, .note-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.note-add { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+.tache-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+.tache-item:last-child { border-bottom: none; }
+.tache-checkbox { width: 20px; height: 20px; cursor: pointer; margin-top: 2px; }
+.tache-content { flex: 1; }
+.tache-text { font-size: 14px; color: var(--text-primary); margin-bottom: 4px; }
+.tache-text.done { text-decoration: line-through; color: var(--text-tertiary); }
+.tache-meta { font-size: 12px; color: var(--text-secondary); }
+.devis-item { display: flex; align-items: center; gap: 14px; }
+.devis-ref { font-size: 14px; font-weight: 600; font-family: var(--font-mono); color: var(--ocean-600); flex-shrink: 0; }
+.devis-content { flex: 1; }
+.devis-libelle { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.devis-detail { font-size: 12px; color: var(--text-secondary); }
+.historique-text { font-size: 14px; color: var(--text-primary); line-height: 1.7; }
