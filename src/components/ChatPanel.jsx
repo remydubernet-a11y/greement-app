@@ -84,7 +84,7 @@ Format professionnel mais chaleureux. Signe toujours "Rémy Dubernet - Agreement
 
 Réponds en français de manière concise et professionnelle.`
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/claude', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
