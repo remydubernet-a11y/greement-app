@@ -7,7 +7,7 @@ export default function ChatPanel({ dossiers, onUpdateDossier, onAddDossier }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Bonjour Rémy ! Je suis votre assistant pour gérer vos dossiers de gréement. Vous pouvez :\n\n• Coller un mail → je crée le dossier automatiquement\n• Me demander de rédiger une réponse\n• Ajouter des notes à un dossier\n• Me poser des questions sur vos dossiers\n\nComment puis-je vous aider ?"
+      content: "Bonjour Rémy ! Je suis votre assistant pour gérer vos dossiers de gréement.\n\nVous pouvez :\n• Coller un mail → je crée le dossier automatiquement\n• Me demander de rédiger une réponse\n• Ajouter des notes à un dossier\n• Me poser des questions sur vos dossiers\n\nComment puis-je vous aider ?"
     }
   ])
   const [input, setInput] = useState('')
@@ -44,7 +44,7 @@ export default function ChatPanel({ dossiers, onUpdateDossier, onAddDossier }) {
         }))
       }
 
-      const systemPrompt = `Tu es l'assistant personnel de Rémy, gérant d'une société de gréement pour bateaux à voile. Tu gères ses dossiers clients.
+      const systemPrompt = `Tu es l'assistant personnel de Rémy, gérant d'une société de gréement pour bateaux à voile (Agreement Gréement). Tu gères ses dossiers clients.
 
 CONTEXTE ACTUEL:
 ${JSON.stringify(context, null, 2)}
@@ -56,32 +56,63 @@ TES CAPACITÉS:
 4. Répondre à des questions sur les dossiers en cours
 
 INSTRUCTIONS POUR CRÉER UN DOSSIER:
-Quand Rémy te colle un mail, tu dois:
-1. Identifier: nom client, bateau, lieu, type d'intervention
-2. Extraire les tâches urgentes du mail
-3. Détecter le niveau de priorité (haute/normale/basse)
-4. Créer un résumé de la situation
-5. Répondre au format JSON:
+Quand Rémy te colle un mail, tu dois identifier le client, le bateau, le lieu, le type d'intervention, extraire les tâches urgentes et créer un résumé.
+
+IMPORTANT - FORMAT EXACT À RESPECTER:
+Tu dois répondre EXCLUSIVEMENT avec un objet JSON valide (pas de texte avant ou après) avec cette structure EXACTE:
 
 {
   "action": "create_dossier",
   "dossier": {
-    "nom": "Nom du client",
-    "bateau": "Nom du bateau",
-    "lieu": "Port/Lieu",
-    "type": "rematage|voilerie|cable|autre",
+    "nom": "Nom complet du client",
+    "bateau": "Type et nom du bateau",
+    "lieu": "Port ou lieu",
+    "type": "rematage",
     "statut": "en_cours",
-    "couleur": "blue|amber|red|green|coral",
-    "mails": [...],
-    "notes": [...],
-    "taches": [...]
+    "couleur": "blue",
+    "mails": [
+      {
+        "expediteur": "Nom de l'expéditeur",
+        "sujet": "Sujet du mail",
+        "apercu": "Résumé court du mail (1-2 phrases)",
+        "nonLu": true
+      }
+    ],
+    "notes": [
+      {
+        "titre": "Titre de la note",
+        "texte": "Contenu détaillé de la note"
+      }
+    ],
+    "taches": [
+      {
+        "texte": "Description de la tâche à faire (OBLIGATOIRE)",
+        "meta": "Détails ou contexte (optionnel)",
+        "priorite": "haute"
+      }
+    ],
+    "historique": "Résumé général du dossier en 1-2 phrases"
   },
-  "message": "Message pour Rémy expliquant ce que tu as créé"
+  "message": "Message court pour Rémy expliquant ce que tu as créé"
 }
+
+VALEURS POSSIBLES:
+- type: "rematage" | "voilerie" | "cable" | "entretien" | "autre"
+- statut: "en_cours" | "attente_assurance" | "devis_a_faire" | "tracking_attente" | "termine"
+- couleur: "blue" | "amber" | "red" | "green" | "coral" | "gray"
+- priorite: "haute" | "normal" | "basse"
+
+RÈGLES IMPORTANTES:
+- Le champ "texte" des tâches est OBLIGATOIRE et doit toujours être rempli avec une description claire
+- Si le client est urgent/pressé, utilise priorite: "haute" et couleur: "red"
+- Si c'est un litige/sinistre, utilise statut: "attente_assurance"
+- Extrais TOUTES les tâches actionnables du mail
 
 INSTRUCTIONS POUR RÉDIGER UN MAIL:
 Format professionnel mais chaleureux. Signe toujours "Rémy Dubernet - Agreement Gréement".
+Réponds normalement (pas en JSON) pour les rédactions de mails.
 
+INSTRUCTIONS POUR LES AUTRES DEMANDES:
 Réponds en français de manière concise et professionnelle.`
 
       const response = await fetch('/api/claude', {
@@ -107,7 +138,7 @@ Réponds en français de manière concise et professionnelle.`
 
         // Vérifier si c'est une action de création de dossier
         try {
-          const jsonMatch = assistantMessage.match(/\{[\s\S]*"action"[\s\S]*\}/)
+          const jsonMatch = assistantMessage.match(/\{[\s\S]*"action"\s*:\s*"create_dossier"[\s\S]*\}/)
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0])
             
@@ -118,7 +149,7 @@ Réponds en français de manière concise et professionnelle.`
               // Afficher le message de confirmation
               setMessages(prev => [...prev, { 
                 role: 'assistant', 
-                content: parsed.message || '✅ Dossier créé avec succès !'
+                content: parsed.message || `✅ Dossier ${parsed.dossier.nom} créé avec succès !`
               }])
             } else {
               setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }])
@@ -130,6 +161,11 @@ Réponds en français de manière concise et professionnelle.`
           // Si ce n'est pas du JSON, afficher normalement
           setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }])
         }
+      } else if (data.error) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `❌ Erreur API : ${JSON.stringify(data.error)}`
+        }])
       }
     } catch (error) {
       console.error('Erreur API:', error)
