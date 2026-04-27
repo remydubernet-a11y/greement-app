@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { storage } from './utils/storage'
+import { supabase } from './utils/supabase'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
@@ -10,23 +10,23 @@ import './App.css'
 
 function App() {
   const [dossiers, setDossiers] = useState([])
-  const [currentView, setCurrentView] = useState('dashboard') // 'dashboard', 'dossier', 'planning'
+  const [currentView, setCurrentView] = useState('dashboard')
   const [selectedDossier, setSelectedDossier] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  // Charger les dossiers au démarrage
+  // Charger les dossiers depuis Supabase au démarrage
   useEffect(() => {
-    const loaded = storage.getDossiers()
-    setDossiers(loaded)
+    loadDossiers()
   }, [])
 
-  // Sauvegarder automatiquement les dossiers quand ils changent
-  useEffect(() => {
-    if (dossiers.length > 0) {
-      storage.saveDossiers(dossiers)
-    }
-  }, [dossiers])
+  const loadDossiers = async () => {
+    setLoading(true)
+    const data = await supabase.getDossiers()
+    setDossiers(data)
+    setLoading(false)
+  }
 
   const handleSelectDossier = (dossierId) => {
     const dossier = dossiers.find(d => d.id === dossierId)
@@ -34,25 +34,25 @@ function App() {
     setCurrentView('dossier')
   }
 
-  const handleUpdateDossier = (dossierId, updates) => {
-    setDossiers(prev => 
-      prev.map(d => d.id === dossierId ? { ...d, ...updates, updatedAt: new Date().toISOString() } : d)
-    )
+  const handleUpdateDossier = async (dossierId, updates) => {
+    await supabase.updateDossier(dossierId, updates)
+    await loadDossiers() // Recharger depuis Supabase
     
-    // Mettre à jour aussi le dossier sélectionné si c'est le même
     if (selectedDossier?.id === dossierId) {
-      setSelectedDossier(prev => ({ ...prev, ...updates }))
+      const updated = await supabase.getDossiers()
+      setSelectedDossier(updated.find(d => d.id === dossierId))
     }
   }
 
-  const handleAddDossier = (dossier) => {
-    const newDossier = storage.addDossier(dossier)
-    setDossiers(prev => [...prev, newDossier])
+  const handleAddDossier = async (dossier) => {
+    await supabase.addDossier(dossier)
+    await loadDossiers() // Recharger depuis Supabase
   }
 
-  const handleDeleteDossier = (dossierId) => {
-    storage.deleteDossier(dossierId)
-    setDossiers(prev => prev.filter(d => d.id !== dossierId))
+  const handleDeleteDossier = async (dossierId) => {
+    await supabase.deleteDossier(dossierId)
+    await loadDossiers() // Recharger depuis Supabase
+    
     if (selectedDossier?.id === dossierId) {
       setSelectedDossier(null)
       setCurrentView('dashboard')
@@ -92,24 +92,33 @@ function App() {
         />
         
         <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          {currentView === 'dashboard' && (
-            <Dashboard
-              dossiers={dossiers}
-              onSelectDossier={handleSelectDossier}
-            />
-          )}
-          
-          {currentView === 'dossier' && selectedDossier && (
-            <Dossier
-              dossier={selectedDossier}
-              onUpdate={handleUpdateDossier}
-              onDelete={handleDeleteDossier}
-              onBack={handleBackToDashboard}
-            />
-          )}
-          
-          {currentView === 'planning' && (
-            <Planning />
+          {loading ? (
+            <div className="loading">
+              <div className="spinner"></div>
+              <p>Chargement des dossiers...</p>
+            </div>
+          ) : (
+            <>
+              {currentView === 'dashboard' && (
+                <Dashboard
+                  dossiers={dossiers}
+                  onSelectDossier={handleSelectDossier}
+                />
+              )}
+              
+              {currentView === 'dossier' && selectedDossier && (
+                <Dossier
+                  dossier={selectedDossier}
+                  onUpdate={handleUpdateDossier}
+                  onDelete={handleDeleteDossier}
+                  onBack={handleBackToDashboard}
+                />
+              )}
+              
+              {currentView === 'planning' && (
+                <Planning />
+              )}
+            </>
           )}
         </main>
       </div>
