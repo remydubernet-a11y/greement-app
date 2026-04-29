@@ -1,6 +1,7 @@
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
+  const sql = neon(process.env.POSTGRES_URL);
   const { id } = req.query;
 
   if (!id) {
@@ -9,7 +10,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const { rows } = await sql`SELECT * FROM dossiers WHERE id = ${id}`;
+      const rows = await sql`SELECT * FROM dossiers WHERE id = ${id}`;
       if (rows.length === 0) {
         return res.status(404).json({ error: 'Dossier not found' });
       }
@@ -19,45 +20,19 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH' || req.method === 'PUT') {
       const updates = req.body;
       
-      // Construire la mise à jour dynamiquement
-      const fields = [];
-      const values = [];
-      
-      if (updates.nom !== undefined) { fields.push('nom'); values.push(updates.nom); }
-      if (updates.bateau !== undefined) { fields.push('bateau'); values.push(updates.bateau); }
-      if (updates.lieu !== undefined) { fields.push('lieu'); values.push(updates.lieu); }
-      if (updates.type !== undefined) { fields.push('type'); values.push(updates.type); }
-      if (updates.statut !== undefined) { fields.push('statut'); values.push(updates.statut); }
-      if (updates.couleur !== undefined) { fields.push('couleur'); values.push(updates.couleur); }
-      if (updates.mails !== undefined) { fields.push('mails'); values.push(JSON.stringify(updates.mails)); }
-      if (updates.notes !== undefined) { fields.push('notes'); values.push(JSON.stringify(updates.notes)); }
-      if (updates.taches !== undefined) { fields.push('taches'); values.push(JSON.stringify(updates.taches)); }
-      if (updates.devis !== undefined) { fields.push('devis'); values.push(JSON.stringify(updates.devis)); }
-      if (updates.historique !== undefined) { fields.push('historique'); values.push(updates.historique); }
-      
-      if (fields.length === 0) {
-        return res.status(400).json({ error: 'No fields to update' });
-      }
+      if (updates.nom !== undefined) await sql`UPDATE dossiers SET nom = ${updates.nom}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.bateau !== undefined) await sql`UPDATE dossiers SET bateau = ${updates.bateau}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.lieu !== undefined) await sql`UPDATE dossiers SET lieu = ${updates.lieu}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.type !== undefined) await sql`UPDATE dossiers SET type = ${updates.type}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.statut !== undefined) await sql`UPDATE dossiers SET statut = ${updates.statut}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.couleur !== undefined) await sql`UPDATE dossiers SET couleur = ${updates.couleur}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.historique !== undefined) await sql`UPDATE dossiers SET historique = ${updates.historique}, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.mails !== undefined) await sql`UPDATE dossiers SET mails = ${JSON.stringify(updates.mails)}::jsonb, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.notes !== undefined) await sql`UPDATE dossiers SET notes = ${JSON.stringify(updates.notes)}::jsonb, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.taches !== undefined) await sql`UPDATE dossiers SET taches = ${JSON.stringify(updates.taches)}::jsonb, updated_at = NOW() WHERE id = ${id}`;
+      if (updates.devis !== undefined) await sql`UPDATE dossiers SET devis = ${JSON.stringify(updates.devis)}::jsonb, updated_at = NOW() WHERE id = ${id}`;
 
-      // Utiliser des requêtes SQL individuelles pour chaque champ modifié
-      for (let i = 0; i < fields.length; i++) {
-        const field = fields[i];
-        const value = values[i];
-        
-        if (field === 'nom') await sql`UPDATE dossiers SET nom = ${value}, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'bateau') await sql`UPDATE dossiers SET bateau = ${value}, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'lieu') await sql`UPDATE dossiers SET lieu = ${value}, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'type') await sql`UPDATE dossiers SET type = ${value}, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'statut') await sql`UPDATE dossiers SET statut = ${value}, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'couleur') await sql`UPDATE dossiers SET couleur = ${value}, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'mails') await sql`UPDATE dossiers SET mails = ${value}::jsonb, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'notes') await sql`UPDATE dossiers SET notes = ${value}::jsonb, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'taches') await sql`UPDATE dossiers SET taches = ${value}::jsonb, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'devis') await sql`UPDATE dossiers SET devis = ${value}::jsonb, updated_at = NOW() WHERE id = ${id}`;
-        if (field === 'historique') await sql`UPDATE dossiers SET historique = ${value}, updated_at = NOW() WHERE id = ${id}`;
-      }
-
-      const { rows } = await sql`SELECT * FROM dossiers WHERE id = ${id}`;
+      const rows = await sql`SELECT * FROM dossiers WHERE id = ${id}`;
       return res.status(200).json(rows[0]);
     }
 

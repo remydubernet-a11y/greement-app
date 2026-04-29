@@ -1,9 +1,11 @@
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
+  const sql = neon(process.env.POSTGRES_URL);
+
   try {
     if (req.method === 'GET') {
-      const { rows } = await sql`SELECT * FROM dossiers ORDER BY created_at DESC`;
+      const rows = await sql`SELECT * FROM dossiers ORDER BY created_at DESC`;
       return res.status(200).json(rows);
     }
 
@@ -11,7 +13,7 @@ export default async function handler(req, res) {
       const dossier = req.body;
       const id = dossier.id || Date.now().toString();
       
-      const { rows } = await sql`
+      const rows = await sql`
         INSERT INTO dossiers (id, nom, bateau, lieu, type, statut, couleur, mails, notes, taches, devis, historique, created_at, updated_at)
         VALUES (
           ${id},
