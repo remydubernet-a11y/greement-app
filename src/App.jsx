@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { storage } from './utils/storage'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
@@ -8,25 +7,81 @@ import Planning from './components/Planning'
 import ChatPanel from './components/ChatPanel'
 import './App.css'
 
+// API helper functions
+const api = {
+  async getDossiers() {
+    try {
+      const res = await fetch('/api/dossiers')
+      if (!res.ok) throw new Error('Erreur chargement')
+      return await res.json()
+    } catch (error) {
+      console.error('Erreur GET dossiers:', error)
+      return []
+    }
+  },
+
+  async addDossier(dossier) {
+    try {
+      const res = await fetch('/api/dossiers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dossier)
+      })
+      if (!res.ok) throw new Error('Erreur ajout')
+      return await res.json()
+    } catch (error) {
+      console.error('Erreur POST dossier:', error)
+      return null
+    }
+  },
+
+  async updateDossier(id, updates) {
+    try {
+      const res = await fetch(`/api/dossier/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      })
+      if (!res.ok) throw new Error('Erreur mise à jour')
+      return await res.json()
+    } catch (error) {
+      console.error('Erreur PATCH dossier:', error)
+      return null
+    }
+  },
+
+  async deleteDossier(id) {
+    try {
+      const res = await fetch(`/api/dossier/${id}`, {
+        method: 'DELETE'
+      })
+      return res.ok
+    } catch (error) {
+      console.error('Erreur DELETE dossier:', error)
+      return false
+    }
+  }
+}
+
 function App() {
   const [dossiers, setDossiers] = useState([])
   const [currentView, setCurrentView] = useState('dashboard')
   const [selectedDossier, setSelectedDossier] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(true)
 
   // Charger les dossiers au démarrage
   useEffect(() => {
-    const loaded = storage.getDossiers()
-    setDossiers(loaded)
+    loadDossiers()
   }, [])
 
-  // Sauvegarder automatiquement les dossiers quand ils changent
-  useEffect(() => {
-    if (dossiers.length > 0) {
-      storage.saveDossiers(dossiers)
-    }
-  }, [dossiers])
+  const loadDossiers = async () => {
+    setLoading(true)
+    const data = await api.getDossiers()
+    setDossiers(data)
+    setLoading(false)
+  }
 
   const handleSelectDossier = (dossierId) => {
     const dossier = dossiers.find(d => d.id === dossierId)
@@ -34,20 +89,24 @@ function App() {
     setCurrentView('dossier')
   }
 
-  const handleUpdateDossier = (dossierId, updates) => {
+  const handleUpdateDossier = async (dossierId, updates) => {
+    // Mise à jour optimiste locale
     setDossiers(prev => 
-      prev.map(d => d.id === dossierId ? { ...d, ...updates, updatedAt: new Date().toISOString() } : d)
+      prev.map(d => d.id === dossierId ? { ...d, ...updates } : d)
     )
-    
     if (selectedDossier?.id === dossierId) {
       setSelectedDossier(prev => ({ ...prev, ...updates }))
     }
+
+    // Mise à jour serveur
+    await api.updateDossier(dossierId, updates)
   }
 
-  const handleAddDossier = (dossier) => {
-    // Normaliser les tâches pour s'assurer qu'elles ont le bon format
+  const handleAddDossier = async (dossier) => {
+    // Normaliser les données
     const normalizedDossier = {
       ...dossier,
+      id: dossier.id || Date.now().toString(),
       taches: (dossier.taches || []).map((t, i) => ({
         id: t.id || (Date.now() + i).toString(),
         texte: t.texte || t.label || t.title || t.description || 'Tâche sans titre',
@@ -77,18 +136,24 @@ function App() {
         statut: d.statut || d.status || 'a_chiffrer'
       }))
     }
-    
-    const newDossier = storage.addDossier(normalizedDossier)
-    setDossiers(prev => [...prev, newDossier])
+
+    // Ajout optimiste local
+    setDossiers(prev => [normalizedDossier, ...prev])
+
+    // Ajout serveur
+    await api.addDossier(normalizedDossier)
   }
 
-  const handleDeleteDossier = (dossierId) => {
-    storage.deleteDossier(dossierId)
+  const handleDeleteDossier = async (dossierId) => {
+    // Suppression optimiste locale
     setDossiers(prev => prev.filter(d => d.id !== dossierId))
     if (selectedDossier?.id === dossierId) {
       setSelectedDossier(null)
       setCurrentView('dashboard')
     }
+
+    // Suppression serveur
+    await api.deleteDossier(dossierId)
   }
 
   const handleBackToDashboard = () => {
@@ -124,24 +189,33 @@ function App() {
         />
         
         <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          {currentView === 'dashboard' && (
-            <Dashboard
-              dossiers={dossiers}
-              onSelectDossier={handleSelectDossier}
-            />
-          )}
-          
-          {currentView === 'dossier' && selectedDossier && (
-            <Dossier
-              dossier={selectedDossier}
-              onUpdate={handleUpdateDossier}
-              onDelete={handleDeleteDossier}
-              onBack={handleBackToDashboard}
-            />
-          )}
-          
-          {currentView === 'planning' && (
-            <Planning />
+          {loading ? (
+            <div className="loading">
+              <div className="spinner"></div>
+              <p style={{marginTop: '16px', color: 'var(--text-secondary)'}}>Chargement des dossiers...</p>
+            </div>
+          ) : (
+            <>
+              {currentView === 'dashboard' && (
+                <Dashboard
+                  dossiers={dossiers}
+                  onSelectDossier={handleSelectDossier}
+                />
+              )}
+              
+              {currentView === 'dossier' && selectedDossier && (
+                <Dossier
+                  dossier={selectedDossier}
+                  onUpdate={handleUpdateDossier}
+                  onDelete={handleDeleteDossier}
+                  onBack={handleBackToDashboard}
+                />
+              )}
+              
+              {currentView === 'planning' && (
+                <Planning />
+              )}
+            </>
           )}
         </main>
       </div>
