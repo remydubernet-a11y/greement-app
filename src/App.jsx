@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from './utils/supabase'
+import { storage } from './utils/storage'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
@@ -14,19 +14,19 @@ function App() {
   const [selectedDossier, setSelectedDossier] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(true)
 
-  // Charger les dossiers depuis Supabase au démarrage
+  // Charger les dossiers au démarrage
   useEffect(() => {
-    loadDossiers()
+    const loaded = storage.getDossiers()
+    setDossiers(loaded)
   }, [])
 
-  const loadDossiers = async () => {
-    setLoading(true)
-    const data = await supabase.getDossiers()
-    setDossiers(data)
-    setLoading(false)
-  }
+  // Sauvegarder automatiquement les dossiers quand ils changent
+  useEffect(() => {
+    if (dossiers.length > 0) {
+      storage.saveDossiers(dossiers)
+    }
+  }, [dossiers])
 
   const handleSelectDossier = (dossierId) => {
     const dossier = dossiers.find(d => d.id === dossierId)
@@ -34,25 +34,57 @@ function App() {
     setCurrentView('dossier')
   }
 
-  const handleUpdateDossier = async (dossierId, updates) => {
-    await supabase.updateDossier(dossierId, updates)
-    await loadDossiers() // Recharger depuis Supabase
+  const handleUpdateDossier = (dossierId, updates) => {
+    setDossiers(prev => 
+      prev.map(d => d.id === dossierId ? { ...d, ...updates, updatedAt: new Date().toISOString() } : d)
+    )
     
     if (selectedDossier?.id === dossierId) {
-      const updated = await supabase.getDossiers()
-      setSelectedDossier(updated.find(d => d.id === dossierId))
+      setSelectedDossier(prev => ({ ...prev, ...updates }))
     }
   }
 
-  const handleAddDossier = async (dossier) => {
-    await supabase.addDossier(dossier)
-    await loadDossiers() // Recharger depuis Supabase
+  const handleAddDossier = (dossier) => {
+    // Normaliser les tâches pour s'assurer qu'elles ont le bon format
+    const normalizedDossier = {
+      ...dossier,
+      taches: (dossier.taches || []).map((t, i) => ({
+        id: t.id || (Date.now() + i).toString(),
+        texte: t.texte || t.label || t.title || t.description || 'Tâche sans titre',
+        meta: t.meta || t.detail || t.subtitle || '',
+        fait: t.fait || t.done || false,
+        priorite: t.priorite || t.priority || 'normal'
+      })),
+      mails: (dossier.mails || []).map((m, i) => ({
+        id: m.id || (Date.now() + i).toString(),
+        expediteur: m.expediteur || m.sender || m.from || '',
+        sujet: m.sujet || m.subject || m.title || '',
+        apercu: m.apercu || m.preview || m.body || m.content || '',
+        date: m.date || new Date().toISOString(),
+        nonLu: m.nonLu !== undefined ? m.nonLu : true
+      })),
+      notes: (dossier.notes || []).map((n, i) => ({
+        id: n.id || (Date.now() + i).toString(),
+        date: n.date || new Date().toISOString().split('T')[0],
+        titre: n.titre || n.title || 'Note',
+        texte: n.texte || n.text || n.content || ''
+      })),
+      devis: (dossier.devis || []).map((d, i) => ({
+        id: d.id || (Date.now() + i).toString(),
+        ref: d.ref || (i + 1).toString(),
+        libelle: d.libelle || d.label || d.title || '',
+        detail: d.detail || d.description || '',
+        statut: d.statut || d.status || 'a_chiffrer'
+      }))
+    }
+    
+    const newDossier = storage.addDossier(normalizedDossier)
+    setDossiers(prev => [...prev, newDossier])
   }
 
-  const handleDeleteDossier = async (dossierId) => {
-    await supabase.deleteDossier(dossierId)
-    await loadDossiers() // Recharger depuis Supabase
-    
+  const handleDeleteDossier = (dossierId) => {
+    storage.deleteDossier(dossierId)
+    setDossiers(prev => prev.filter(d => d.id !== dossierId))
     if (selectedDossier?.id === dossierId) {
       setSelectedDossier(null)
       setCurrentView('dashboard')
@@ -68,7 +100,7 @@ function App() {
     ? dossiers.filter(d => 
         d.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
         d.bateau.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.lieu.toLowerCase().includes(searchQuery.toLowerCase())
+        (d.lieu && d.lieu.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : dossiers
 
@@ -92,33 +124,24 @@ function App() {
         />
         
         <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-          {loading ? (
-            <div className="loading">
-              <div className="spinner"></div>
-              <p>Chargement des dossiers...</p>
-            </div>
-          ) : (
-            <>
-              {currentView === 'dashboard' && (
-                <Dashboard
-                  dossiers={dossiers}
-                  onSelectDossier={handleSelectDossier}
-                />
-              )}
-              
-              {currentView === 'dossier' && selectedDossier && (
-                <Dossier
-                  dossier={selectedDossier}
-                  onUpdate={handleUpdateDossier}
-                  onDelete={handleDeleteDossier}
-                  onBack={handleBackToDashboard}
-                />
-              )}
-              
-              {currentView === 'planning' && (
-                <Planning />
-              )}
-            </>
+          {currentView === 'dashboard' && (
+            <Dashboard
+              dossiers={dossiers}
+              onSelectDossier={handleSelectDossier}
+            />
+          )}
+          
+          {currentView === 'dossier' && selectedDossier && (
+            <Dossier
+              dossier={selectedDossier}
+              onUpdate={handleUpdateDossier}
+              onDelete={handleDeleteDossier}
+              onBack={handleBackToDashboard}
+            />
+          )}
+          
+          {currentView === 'planning' && (
+            <Planning />
           )}
         </main>
       </div>
