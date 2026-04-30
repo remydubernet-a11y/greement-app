@@ -36,7 +36,54 @@ async function getAccessToken(sql) {
   return tokens.access_token;
 }
 
-async function markAsRead(accessToken, messageId) {
+// Récupérer ou créer le label "Greement-Traité"
+async function getOrCreateProcessedLabel(accessToken) {
+  // Lister les labels
+  const listResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  const listData = await listResponse.json();
+
+  const existing = listData.labels?.find(l => 
+    l.name.toLowerCase() === 'greement-traité' || l.name.toLowerCase() === 'greement-traite'
+  );
+  if (existing) return existing.id;
+
+  // Créer le label
+  const createResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'Greement-Traité',
+      labelListVisibility: 'labelShow',
+      messageListVisibility: 'show'
+    })
+  });
+  const createData = await createResponse.json();
+  return createData.id;
+}
+
+// Récupérer l'ID du label "Greement"
+async function getGreementLabelId(accessToken) {
+  const listResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  const listData = await listResponse.json();
+  const greement = listData.labels?.find(l => l.name.toLowerCase() === 'greement');
+  return greement?.id;
+}
+
+// Retirer le label "Greement", ajouter "Greement-Traité", et marquer comme lu
+async function moveToProcessed(accessToken, messageId) {
+  const greementLabelId = await getGreementLabelId(accessToken);
+  const processedLabelId = await getOrCreateProcessedLabel(accessToken);
+
+  const removeIds = ['UNREAD'];
+  if (greementLabelId) removeIds.push(greementLabelId);
+
   await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
     method: 'POST',
     headers: {
@@ -44,7 +91,8 @@ async function markAsRead(accessToken, messageId) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      removeLabelIds: ['UNREAD']
+      removeLabelIds: removeIds,
+      addLabelIds: [processedLabelId]
     })
   });
 }
@@ -63,7 +111,6 @@ export default async function handler(req, res) {
   const sql = neon(process.env.POSTGRES_URL);
 
   try {
-    // 1. Préparer le contexte des dossiers existants pour Claude
     const context = (dossiers || []).map(d => ({
       id: d.id,
       nom: d.nom,
@@ -72,7 +119,6 @@ export default async function handler(req, res) {
       statut: d.statut
     }));
 
-    // 2. Demander à Claude d'analyser le mail
     const systemPrompt = `Tu es l'assistant de Rémy Dubernet (Agreement Gréement). Analyse ce mail Gmail et détermine s'il faut :
 1. Créer un nouveau dossier client
 2. Ajouter une note/tâche à un dossier existant
@@ -151,7 +197,6 @@ ${mail.body}`
 
     const responseText = claudeData.content[0].text;
 
-    // 3. Parser le JSON
     let parsed;
     try {
       const cleanText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
@@ -162,12 +207,11 @@ ${mail.body}`
       return res.status(500).json({ error: 'Parsing failed', detail: responseText });
     }
 
-    // 4. Exécuter l'action
     const accessToken = await getAccessToken(sql);
 
     if (parsed.action === 'ignore') {
-      // Marquer comme lu mais ne rien faire
-      if (accessToken) await markAsRead(accessToken, mail.id);
+      // Mail ignoré : on retire du label Greement et on ajoute à Greement-Traité
+      if (accessToken) await moveToProcessed(accessToken, mail.id);
       return res.status(200).json({ 
         action: 'ignored', 
         reason: parsed.reason 
@@ -175,11 +219,9 @@ ${mail.body}`
     }
 
     if (parsed.action === 'create_dossier' && parsed.dossier) {
-      // Normaliser et créer le dossier
       const dossier = parsed.dossier;
       const id = Date.now().toString();
       
-      // Ajouter le mail original aux mails du dossier
       const mails = dossier.mails || [];
       mails.unshift({
         id: mail.id,
@@ -226,8 +268,8 @@ ${mail.body}`
         )
       `;
 
-      // Marquer le mail comme lu
-      if (accessToken) await markAsRead(accessToken, mail.id);
+      // Déplacer le mail vers "Greement-Traité"
+      if (accessToken) await moveToProcessed(accessToken, mail.id);
 
       return res.status(200).json({
         action: 'created',
@@ -242,9 +284,7 @@ ${mail.body}`
       }
 
       const dossier = existing[0];
-      const updates = {};
 
-      // Ajouter le mail
       const mails = dossier.mails || [];
       mails.unshift({
         id: mail.id,
@@ -258,7 +298,6 @@ ${mail.body}`
       
       await sql`UPDATE dossiers SET mails = ${JSON.stringify(mails)}::jsonb WHERE id = ${parsed.dossierId}`;
 
-      // Ajouter la note
       if (parsed.note) {
         const notes = dossier.notes || [];
         notes.push({
@@ -270,7 +309,6 @@ ${mail.body}`
         await sql`UPDATE dossiers SET notes = ${JSON.stringify(notes)}::jsonb WHERE id = ${parsed.dossierId}`;
       }
 
-      // Ajouter les tâches
       if (parsed.taches && parsed.taches.length > 0) {
         const taches = dossier.taches || [];
         parsed.taches.forEach((t, i) => {
@@ -287,8 +325,8 @@ ${mail.body}`
 
       await sql`UPDATE dossiers SET updated_at = NOW() WHERE id = ${parsed.dossierId}`;
 
-      // Marquer comme lu
-      if (accessToken) await markAsRead(accessToken, mail.id);
+      // Déplacer le mail vers "Greement-Traité"
+      if (accessToken) await moveToProcessed(accessToken, mail.id);
 
       return res.status(200).json({
         action: 'updated',

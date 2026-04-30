@@ -85,6 +85,13 @@ export default function Planning({ dossiers, onReloadDossiers }) {
       
       // Recharger les dossiers dans l'app
       if (onReloadDossiers) onReloadDossiers()
+      
+      // Retirer le mail de la liste après 2 secondes (sauf en cas d'erreur)
+      if (data.action === 'created' || data.action === 'updated' || data.action === 'ignored') {
+        setTimeout(() => {
+          setMails(prev => prev.filter(m => m.id !== mail.id))
+        }, 2000)
+      }
     } catch (err) {
       setProcessing(prev => ({ ...prev, [mail.id]: { status: 'error', message: '❌ ' + err.message } }))
     }
