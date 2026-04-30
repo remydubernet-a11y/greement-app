@@ -62,6 +62,17 @@ export default function Planning({ dossiers, onReloadDossiers }) {
     window.location.href = '/api/auth/gmail'
   }
 
+  const reconnectGmail = async () => {
+    if (!confirm('Reconnecter Gmail ? Cela permettra d\'autoriser les nouvelles permissions (modifier les labels).')) return
+    
+    try {
+      await fetch('/api/gmail/disconnect', { method: 'POST' })
+      window.location.href = '/api/auth/gmail'
+    } catch (err) {
+      alert('Erreur : ' + err.message)
+    }
+  }
+
   const processOneMail = async (mail) => {
     setProcessing(prev => ({ ...prev, [mail.id]: 'processing' }))
     
@@ -171,7 +182,7 @@ export default function Planning({ dossiers, onReloadDossiers }) {
           </p>
         </div>
         {gmailConnected && (
-          <div style={{display: 'flex', gap: '8px'}}>
+          <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
             <button className="btn-secondary" onClick={fetchMails} disabled={loadingMails || batchProcessing}>
               {loadingMails ? <Loader2 size={18} className="spinner-icon" /> : <RefreshCw size={18} />}
               Actualiser
@@ -182,6 +193,10 @@ export default function Planning({ dossiers, onReloadDossiers }) {
                 Traiter tous les mails ({mails.length})
               </button>
             )}
+            <button className="btn-ghost" onClick={reconnectGmail} title="Reconnecter Gmail (mise à jour des permissions)">
+              <Link size={16} />
+              Reconnecter
+            </button>
           </div>
         )}
       </div>

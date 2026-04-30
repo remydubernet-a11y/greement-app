@@ -2,9 +2,9 @@ export default async function handler(req, res) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
+  // Scope qui permet à la fois de LIRE et MODIFIER (ajouter/retirer labels)
   const scopes = [
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.labels'
+    'https://www.googleapis.com/auth/gmail.modify'
   ].join(' ');
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
