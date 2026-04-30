@@ -1,4 +1,4 @@
-import { AlertCircle, Clock, CheckCircle2, FileText } from 'lucide-react'
+import { AlertCircle, Clock, CheckCircle2, FileText, ChevronRight, Mail, Anchor, MapPin, ListTodo } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import './Dashboard.css'
@@ -7,14 +7,9 @@ const STATUT_LABELS = {
   tracking_attente: 'Tracking en attente',
   devis_a_faire: 'Devis à faire',
   suivi_marc: 'Suivi Marc',
+  attente_assurance: 'Attente assurance',
   en_cours: 'En cours',
   termine: 'Terminé'
-}
-
-const PRIORITE_ICONS = {
-  haute: AlertCircle,
-  normal: Clock,
-  basse: CheckCircle2
 }
 
 const PRIORITE_COLORS = {
@@ -24,7 +19,7 @@ const PRIORITE_COLORS = {
 }
 
 export default function Dashboard({ dossiers, onSelectDossier }) {
-  // Calculer les statistiques
+  // Stats
   const stats = {
     total: dossiers.length,
     devis: dossiers.filter(d => d.devis && d.devis.length > 0).length,
@@ -36,19 +31,16 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
     )
   }
 
-  // Toutes les tâches urgentes de tous les dossiers
+  // Tâches urgentes triées
   const tachesUrgentes = dossiers.flatMap(dossier => 
     (dossier.taches || [])
       .filter(t => !t.fait && t.priorite === 'haute')
       .map(t => ({ ...t, dossier }))
-  ).sort((a, b) => {
-    if (a.priorite === b.priorite) return 0
-    return a.priorite === 'haute' ? -1 : 1
-  })
+  )
 
   // Dossiers récents
   const dossiersRecents = [...dossiers]
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .sort((a, b) => new Date(b.updated_at || b.updatedAt) - new Date(a.updated_at || a.updatedAt))
     .slice(0, 6)
 
   return (
@@ -60,7 +52,7 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
         </p>
       </div>
 
-      {/* Stats */}
+      {/* Stats clickables */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon stat-blue">
@@ -94,7 +86,7 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
 
         <div className="stat-card">
           <div className="stat-icon stat-coral">
-            <Clock size={24} />
+            <Mail size={24} />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.mailsNonLus}</div>
@@ -108,39 +100,46 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
         <div className="dashboard-section">
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Actions urgentes</h2>
-              <span className="badge badge-red">{tachesUrgentes.length}</span>
+              <div className="card-title-wrapper">
+                <AlertCircle size={20} className="card-title-icon urgent" />
+                <h2 className="card-title">Actions urgentes</h2>
+              </div>
+              {tachesUrgentes.length > 0 && (
+                <span className="badge badge-red">{tachesUrgentes.length}</span>
+              )}
             </div>
 
             {tachesUrgentes.length === 0 ? (
               <div className="empty-state">
-                <CheckCircle2 size={48} className="empty-state-icon" />
-                <p className="empty-state-title">Aucune action urgente</p>
-                <p className="empty-state-text">Tous les dossiers sont à jour</p>
+                <CheckCircle2 size={48} className="empty-state-icon success" />
+                <p className="empty-state-title">Tout est sous contrôle !</p>
+                <p className="empty-state-text">Aucune action urgente</p>
               </div>
             ) : (
               <div className="actions-list">
-                {tachesUrgentes.map(tache => {
-                  const Icon = PRIORITE_ICONS[tache.priorite]
-                  return (
-                    <div 
-                      key={`${tache.dossier.id}-${tache.id}`}
-                      className="action-item"
-                      onClick={() => onSelectDossier(tache.dossier.id)}
-                    >
-                      <div className={`action-icon icon-${PRIORITE_COLORS[tache.priorite]}`}>
-                        <Icon size={16} />
-                      </div>
-                      <div className="action-content">
-                        <div className="action-title">{tache.texte}</div>
-                        <div className="action-meta">
-                          <span className="action-dossier">{tache.dossier.nom}</span>
-                          {tache.meta && <span className="action-detail">{tache.meta}</span>}
-                        </div>
+                {tachesUrgentes.map(tache => (
+                  <button 
+                    key={`${tache.dossier.id}-${tache.id}`}
+                    className="action-item-btn"
+                    onClick={() => onSelectDossier(tache.dossier.id)}
+                    type="button"
+                  >
+                    <div className={`action-icon icon-${PRIORITE_COLORS[tache.priorite]}`}>
+                      <AlertCircle size={16} />
+                    </div>
+                    <div className="action-content">
+                      <div className="action-title">{tache.texte}</div>
+                      <div className="action-meta">
+                        <span className="action-dossier-badge">
+                          <Anchor size={10} />
+                          {tache.dossier.nom}
+                        </span>
+                        {tache.meta && <span className="action-detail">{tache.meta}</span>}
                       </div>
                     </div>
-                  )
-                })}
+                    <ChevronRight size={16} className="action-chevron" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -150,7 +149,10 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
         <div className="dashboard-section">
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Dossiers récents</h2>
+              <div className="card-title-wrapper">
+                <FileText size={20} className="card-title-icon" />
+                <h2 className="card-title">Dossiers récents</h2>
+              </div>
             </div>
 
             {dossiersRecents.length === 0 ? (
@@ -161,32 +163,46 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
               </div>
             ) : (
               <div className="dossiers-list">
-                {dossiersRecents.map(dossier => (
-                  <div
-                    key={dossier.id}
-                    className="dossier-card"
-                    onClick={() => onSelectDossier(dossier.id)}
-                  >
-                    <div className={`dossier-card-avatar avatar-${dossier.couleur}`}>
-                      {dossier.nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="dossier-card-info">
-                      <div className="dossier-card-name">{dossier.nom}</div>
-                      <div className="dossier-card-bateau">{dossier.bateau}</div>
-                      {dossier.lieu && <div className="dossier-card-lieu">{dossier.lieu}</div>}
-                    </div>
-                    <div className="dossier-card-status">
-                      <span className={`badge badge-${dossier.couleur}`}>
-                        {STATUT_LABELS[dossier.statut] || dossier.statut}
-                      </span>
-                      {dossier.taches && dossier.taches.filter(t => !t.fait).length > 0 && (
-                        <div className="dossier-card-tasks">
-                          {dossier.taches.filter(t => !t.fait).length} à faire
+                {dossiersRecents.map(dossier => {
+                  const tachesCount = dossier.taches?.filter(t => !t.fait).length || 0
+                  return (
+                    <button
+                      key={dossier.id}
+                      className="dossier-card-btn"
+                      onClick={() => onSelectDossier(dossier.id)}
+                      type="button"
+                    >
+                      <div className={`dossier-card-avatar avatar-${dossier.couleur}`}>
+                        {dossier.nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="dossier-card-info">
+                        <div className="dossier-card-name">{dossier.nom}</div>
+                        <div className="dossier-card-bateau">
+                          <Anchor size={12} />
+                          {dossier.bateau}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                        {dossier.lieu && (
+                          <div className="dossier-card-lieu">
+                            <MapPin size={12} />
+                            {dossier.lieu}
+                          </div>
+                        )}
+                      </div>
+                      <div className="dossier-card-right">
+                        <span className={`badge badge-${dossier.couleur}`}>
+                          {STATUT_LABELS[dossier.statut] || dossier.statut}
+                        </span>
+                        {tachesCount > 0 && (
+                          <div className="dossier-card-tasks">
+                            <ListTodo size={12} />
+                            {tachesCount} tâche{tachesCount > 1 ? 's' : ''}
+                          </div>
+                        )}
+                        <ChevronRight size={18} className="dossier-card-chevron" />
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
