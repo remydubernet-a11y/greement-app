@@ -1,4 +1,4 @@
-import { Search, Calendar, LayoutDashboard, Anchor } from 'lucide-react'
+import { Search, Mail, LayoutDashboard, Anchor } from 'lucide-react'
 import './Header.css'
 
 export default function Header({ searchQuery, onSearchChange, currentView, onViewChange }) {
@@ -23,8 +23,8 @@ export default function Header({ searchQuery, onSearchChange, currentView, onVie
               className={`nav-tab ${currentView === 'planning' ? 'active' : ''}`}
               onClick={() => onViewChange('planning')}
             >
-              <Calendar size={18} />
-              Planning
+              <Mail size={18} />
+              Mails Gmail
             </button>
           </nav>
         </div>
