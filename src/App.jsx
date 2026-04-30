@@ -213,6 +213,8 @@ function App() {
                 <Dashboard
                   dossiers={dossiers}
                   onSelectDossier={handleSelectDossier}
+                  onChangeView={setCurrentView}
+                  onOpenSidebar={() => setSidebarOpen(true)}
                 />
               )}
               

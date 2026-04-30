@@ -1,4 +1,5 @@
-import { AlertCircle, Clock, CheckCircle2, FileText, ChevronRight, Mail, Anchor, MapPin, ListTodo } from 'lucide-react'
+import { useRef } from 'react'
+import { AlertCircle, Clock, CheckCircle2, FileText, ChevronRight, Mail, Anchor, MapPin, ListTodo, DollarSign } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import './Dashboard.css'
@@ -18,7 +19,10 @@ const PRIORITE_COLORS = {
   basse: 'green'
 }
 
-export default function Dashboard({ dossiers, onSelectDossier }) {
+export default function Dashboard({ dossiers, onSelectDossier, onChangeView, onOpenSidebar }) {
+  const actionsRef = useRef(null)
+  const devisRef = useRef(null)
+
   // Stats
   const stats = {
     total: dossiers.length,
@@ -31,7 +35,7 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
     )
   }
 
-  // Tâches urgentes triées
+  // Actions urgentes
   const tachesUrgentes = dossiers.flatMap(dossier => 
     (dossier.taches || [])
       .filter(t => !t.fait && t.priorite === 'haute')
@@ -43,6 +47,25 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
     .sort((a, b) => new Date(b.updated_at || b.updatedAt) - new Date(a.updated_at || a.updatedAt))
     .slice(0, 6)
 
+  // Dossiers avec devis en cours
+  const dossiersAvecDevis = dossiers.filter(d => d.devis && d.devis.length > 0)
+
+  const scrollToActions = () => {
+    actionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const scrollToDevis = () => {
+    devisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleClickDossiersTotal = () => {
+    if (onOpenSidebar) onOpenSidebar()
+  }
+
+  const handleClickMailsNonLus = () => {
+    if (onChangeView) onChangeView('planning')
+  }
+
   return (
     <div className="dashboard">
       <div className="page-header">
@@ -52,9 +75,13 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
         </p>
       </div>
 
-      {/* Stats clickables */}
+      {/* Stats CLIQUABLES */}
       <div className="stats-grid">
-        <div className="stat-card">
+        <button 
+          className="stat-card clickable"
+          onClick={handleClickDossiersTotal}
+          type="button"
+        >
           <div className="stat-icon stat-blue">
             <FileText size={24} />
           </div>
@@ -62,9 +89,14 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
             <div className="stat-value">{stats.total}</div>
             <div className="stat-label">Dossiers actifs</div>
           </div>
-        </div>
+          <ChevronRight size={18} className="stat-chevron" />
+        </button>
 
-        <div className="stat-card">
+        <button 
+          className="stat-card clickable"
+          onClick={scrollToActions}
+          type="button"
+        >
           <div className="stat-icon stat-amber">
             <AlertCircle size={24} />
           </div>
@@ -72,19 +104,29 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
             <div className="stat-value">{stats.actionsUrgentes}</div>
             <div className="stat-label">Actions urgentes</div>
           </div>
-        </div>
+          <ChevronRight size={18} className="stat-chevron" />
+        </button>
 
-        <div className="stat-card">
+        <button 
+          className="stat-card clickable"
+          onClick={scrollToDevis}
+          type="button"
+        >
           <div className="stat-icon stat-green">
-            <FileText size={24} />
+            <DollarSign size={24} />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.devis}</div>
             <div className="stat-label">Devis en cours</div>
           </div>
-        </div>
+          <ChevronRight size={18} className="stat-chevron" />
+        </button>
 
-        <div className="stat-card">
+        <button 
+          className="stat-card clickable"
+          onClick={handleClickMailsNonLus}
+          type="button"
+        >
           <div className="stat-icon stat-coral">
             <Mail size={24} />
           </div>
@@ -92,12 +134,13 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
             <div className="stat-value">{stats.mailsNonLus}</div>
             <div className="stat-label">Mails non lus</div>
           </div>
-        </div>
+          <ChevronRight size={18} className="stat-chevron" />
+        </button>
       </div>
 
       <div className="dashboard-grid">
         {/* Actions urgentes */}
-        <div className="dashboard-section">
+        <div className="dashboard-section" ref={actionsRef}>
           <div className="card">
             <div className="card-header">
               <div className="card-title-wrapper">
@@ -208,6 +251,49 @@ export default function Dashboard({ dossiers, onSelectDossier }) {
           </div>
         </div>
       </div>
+
+      {/* Section Devis en cours */}
+      {dossiersAvecDevis.length > 0 && (
+        <div className="dashboard-section dashboard-full-width" ref={devisRef}>
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title-wrapper">
+                <DollarSign size={20} className="card-title-icon" />
+                <h2 className="card-title">Devis en cours</h2>
+              </div>
+              <span className="badge badge-green">{dossiersAvecDevis.length} dossier{dossiersAvecDevis.length > 1 ? 's' : ''}</span>
+            </div>
+
+            <div className="dossiers-list">
+              {dossiersAvecDevis.map(dossier => (
+                <button
+                  key={dossier.id}
+                  className="dossier-card-btn"
+                  onClick={() => onSelectDossier(dossier.id)}
+                  type="button"
+                >
+                  <div className={`dossier-card-avatar avatar-${dossier.couleur}`}>
+                    {dossier.nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="dossier-card-info">
+                    <div className="dossier-card-name">{dossier.nom}</div>
+                    <div className="dossier-card-bateau">
+                      <Anchor size={12} />
+                      {dossier.bateau}
+                    </div>
+                  </div>
+                  <div className="dossier-card-right">
+                    <span className="badge badge-green">
+                      {dossier.devis.length} devis
+                    </span>
+                    <ChevronRight size={18} className="dossier-card-chevron" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

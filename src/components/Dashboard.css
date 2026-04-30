@@ -37,9 +37,45 @@
   align-items: center;
   gap: 16px;
   transition: all 0.2s ease;
+  font-family: var(--font-sans);
 }
 
-.stat-card:hover {
+/* Stat card cliquable comme un bouton */
+.stat-card.clickable {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  text-align: left;
+  width: 100%;
+  position: relative;
+  padding-right: 40px;
+}
+
+.stat-card.clickable:hover {
+  border-color: var(--accent);
+  background: var(--ocean-100);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-card.clickable:active {
+  transform: translateY(0);
+}
+
+.stat-chevron {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+}
+
+.stat-card.clickable:hover .stat-chevron {
+  color: var(--accent);
+  transform: translateY(-50%) translateX(2px);
+}
+
+.stat-card:not(.clickable):hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
@@ -111,6 +147,11 @@
 }
 
 .dashboard-section { min-width: 0; }
+
+/* Section pleine largeur (pour les devis) */
+.dashboard-full-width {
+  margin-top: 24px;
+}
 
 /* === ACTIONS URGENTES - BOUTONS CLIQUABLES === */
 .actions-list {
