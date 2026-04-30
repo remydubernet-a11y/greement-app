@@ -213,7 +213,10 @@ function App() {
               )}
               
               {currentView === 'planning' && (
-                <Planning />
+                <Planning 
+                  dossiers={dossiers}
+                  onReloadDossiers={loadDossiers}
+                />
               )}
             </>
           )}

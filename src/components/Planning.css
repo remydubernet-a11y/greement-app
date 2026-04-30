@@ -154,3 +154,78 @@
 .spinner-icon {
   animation: spin 1s linear infinite;
 }
+
+/* Batch result */
+.batch-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.batch-result svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.batch-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.stat-success { color: #065f46; }
+.stat-neutral { color: var(--text-secondary); }
+.stat-error { color: var(--red-600); }
+
+/* Processing status */
+.processing-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.processing-result {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+}
+
+.processing-result.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.processing-result.ignored {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.processing-result.error {
+  background: #fee2e2;
+  color: var(--red-600);
+}
+
+.mail-card.success {
+  opacity: 0.6;
+  border-color: #6ee7b7;
+}
+
+.mail-card.error {
+  border-color: var(--red-500);
+}
+
+.mail-card.ignored {
+  opacity: 0.5;
+}
