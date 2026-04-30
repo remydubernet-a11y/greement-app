@@ -204,6 +204,8 @@
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
+    z-index: 200;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
   }
   
   .sidebar.open {

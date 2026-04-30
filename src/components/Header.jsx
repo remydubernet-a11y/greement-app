@@ -1,11 +1,15 @@
-import { Search, Mail, LayoutDashboard, Anchor } from 'lucide-react'
+import { Search, Mail, LayoutDashboard, Anchor, Menu } from 'lucide-react'
 import './Header.css'
 
-export default function Header({ searchQuery, onSearchChange, currentView, onViewChange }) {
+export default function Header({ searchQuery, onSearchChange, currentView, onViewChange, onToggleSidebar }) {
   return (
     <header className="header">
       <div className="header-content">
         <div className="header-left">
+          <button className="mobile-menu-btn" onClick={onToggleSidebar} title="Menu">
+            <Menu size={22} />
+          </button>
+          
           <div className="logo">
             <Anchor size={28} strokeWidth={2.5} />
             <span className="logo-text">Gréement</span>

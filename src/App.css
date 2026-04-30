@@ -10,6 +10,25 @@
   position: relative;
 }
 
+/* Overlay mobile pour fermer la sidebar en cliquant à côté */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-overlay {
+    display: block;
+  }
+}
+
 .main-content {
   flex: 1;
   padding: 32px;

@@ -67,7 +67,7 @@ function App() {
   const [dossiers, setDossiers] = useState([])
   const [currentView, setCurrentView] = useState('dashboard')
   const [selectedDossier, setSelectedDossier] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024)
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -176,13 +176,26 @@ function App() {
         onSearchChange={setSearchQuery}
         currentView={currentView}
         onViewChange={setCurrentView}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
       
       <div className="app-body">
+        {/* Overlay mobile quand sidebar ouverte */}
+        {sidebarOpen && (
+          <div 
+            className="sidebar-overlay"
+            onClick={() => setSidebarOpen(false)}
+          ></div>
+        )}
+        
         <Sidebar
           dossiers={filteredDossiers}
           selectedDossier={selectedDossier}
-          onSelectDossier={handleSelectDossier}
+          onSelectDossier={(id) => {
+            handleSelectDossier(id)
+            // Fermer la sidebar sur mobile après sélection
+            if (window.innerWidth <= 1024) setSidebarOpen(false)
+          }}
           onAddDossier={handleAddDossier}
           isOpen={sidebarOpen}
           onToggle={() => setSidebarOpen(!sidebarOpen)}
