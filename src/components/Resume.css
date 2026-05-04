@@ -1,5 +1,5 @@
 /* ============================================
-   MODAL RESUME - VUE ÉCRAN
+   MODAL RESUME
    ============================================ */
 .resume-modal {
   position: fixed;
@@ -39,210 +39,201 @@
 }
 
 /* ============================================
-   PAGE A4
+   PAGE A4 ULTRA CONDENSÉE
    ============================================ */
 .resume-page {
   max-width: 21cm;
-  min-height: 29.7cm;
   margin: 0 auto;
   background: white;
-  padding: 1.5cm;
+  padding: 1.2cm;
   box-shadow: var(--shadow-xl);
   font-family: 'Inter', sans-serif;
-  color: #1a1a1a;
+  color: #000;
+  font-size: 10pt;
+  line-height: 1.3;
 }
 
-/* En-tête */
+/* En-tête condensé */
 .resume-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  border-bottom: 2px solid #1c3554;
-  padding-bottom: 16px;
-  margin-bottom: 24px;
+  align-items: flex-end;
+  border-bottom: 1.5px solid #000;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-.resume-title {
-  font-size: 24px;
+.resume-header-left h1 {
+  font-size: 13pt;
   font-weight: 700;
-  color: #0a1628;
-  margin-bottom: 4px;
+  color: #000;
+  margin: 0;
+  line-height: 1.2;
 }
 
-.resume-subtitle {
-  font-size: 13px;
-  color: #5279a5;
-  font-weight: 500;
+.resume-meta {
+  font-size: 9pt;
+  color: #444;
+  margin-top: 2px;
+}
+
+.resume-meta strong {
+  color: #000;
 }
 
 .resume-date {
-  font-size: 12px;
-  color: #5f5e5a;
-  text-align: right;
-  font-style: italic;
-}
-
-/* Stats globales */
-.resume-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: #f3efe8;
-  border-radius: 8px;
-}
-
-.resume-stat {
-  text-align: center;
-  padding: 8px;
-}
-
-.resume-stat.urgent {
-  background: #fee2e2;
-  border-radius: 6px;
-}
-
-.resume-stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1c3554;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.resume-stat.urgent .resume-stat-value {
-  color: #dc2626;
-}
-
-.resume-stat-label {
-  font-size: 11px;
-  color: #5279a5;
+  font-size: 9pt;
+  color: #444;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Tableau compact */
+.resume-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+
+.resume-table thead {
+  display: table-header-group;
+}
+
+.resume-table th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 8pt;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #000;
+  background: #f5f5f5;
+  color: #000;
 }
 
-/* Liste des dossiers */
-.resume-dossiers {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.resume-table td {
+  padding: 5px 6px;
+  border-bottom: 0.5px solid #ccc;
+  vertical-align: top;
 }
 
-.resume-dossier {
-  border-left: 4px solid;
-  padding: 12px 16px;
-  background: #faf8f4;
-  border-radius: 0 6px 6px 0;
+.resume-table tr {
   page-break-inside: avoid;
 }
 
-.resume-dossier.dossier-color-red { border-left-color: #dc2626; background: #fef2f2; }
-.resume-dossier.dossier-color-coral { border-left-color: #ea580c; background: #fff7ed; }
-.resume-dossier.dossier-color-amber { border-left-color: #f59e0b; background: #fffbeb; }
-.resume-dossier.dossier-color-blue { border-left-color: #1485cc; background: #f0f9ff; }
-.resume-dossier.dossier-color-gray { border-left-color: #6b7280; background: #f9fafb; }
-.resume-dossier.dossier-color-green { border-left-color: #10b981; background: #f0fdf4; }
-
-.resume-dossier-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
+/* Colonnes */
+.col-priority {
+  width: 16px;
+  text-align: center;
 }
 
-.resume-dossier-name {
-  font-size: 15px;
+.col-client {
+  width: 22%;
+}
+
+.col-statut {
+  width: 13%;
+  font-size: 8.5pt;
+  color: #333;
+}
+
+.col-taches {
+  width: auto;
+}
+
+/* Ligne urgente */
+.row-urgent {
+  background: #fafafa;
+}
+
+.urgent-mark {
+  color: #000;
+  font-size: 11pt;
+  font-weight: bold;
+}
+
+/* Client */
+.client-name {
   font-weight: 700;
-  color: #0a1628;
-  margin-bottom: 2px;
+  font-size: 9.5pt;
+  color: #000;
 }
 
-.resume-dossier-info {
-  font-size: 12px;
-  color: #5279a5;
+.client-bateau {
+  font-size: 8.5pt;
+  color: #444;
+  margin-top: 1px;
 }
 
-.resume-dossier-statut {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 12px;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.statut-red { background: #fee2e2; color: #991b1b; }
-.statut-coral { background: #ffedd5; color: #9a3412; }
-.statut-amber { background: #fef3c7; color: #92400e; }
-.statut-blue { background: #dbeafe; color: #1e40af; }
-.statut-gray { background: #e5e7eb; color: #1f2937; }
-.statut-green { background: #d1fae5; color: #065f46; }
-
-/* Tâches */
-.resume-taches {
+/* Liste des tâches compacte */
+.taches-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.resume-tache {
+.taches-list li {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 6px 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  font-size: 12px;
+  gap: 5px;
+  padding: 1px 0;
+  font-size: 9pt;
+  line-height: 1.35;
 }
 
-.resume-tache:first-child {
-  border-top: none;
-}
-
-.resume-tache-priorite {
-  font-size: 10px;
+.tache-symbol {
+  font-weight: 700;
   flex-shrink: 0;
-  margin-top: 1px;
+  width: 8px;
+  text-align: center;
+  color: #000;
 }
 
-.resume-tache-content {
+.tache-haute .tache-symbol {
+  color: #000;
+  font-size: 11pt;
+  line-height: 1;
+}
+
+.tache-text {
   flex: 1;
 }
 
-.resume-tache-text {
-  color: #1a1a1a;
-  line-height: 1.4;
-  margin-bottom: 2px;
-}
-
-.resume-tache.priorite-haute .resume-tache-text {
+.tache-haute .tache-text {
   font-weight: 600;
 }
 
-.resume-tache-meta {
-  font-size: 11px;
-  color: #6b7280;
+.tache-meta {
+  color: #666;
   font-style: italic;
+  font-size: 8.5pt;
 }
 
 /* Pied de page */
 .resume-footer {
-  margin-top: 32px;
-  padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 12px;
+  padding-top: 6px;
+  border-top: 0.5px solid #000;
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
-  color: #6b7280;
+  align-items: center;
+  font-size: 8pt;
+  color: #444;
+}
+
+.resume-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.resume-legend strong {
+  color: #000;
+  font-family: monospace;
 }
 
 /* ============================================
-   STYLES IMPRESSION
+   IMPRESSION OPTIMISÉE
    ============================================ */
 @media print {
-  /* Cacher tout sauf le contenu à imprimer */
   body * {
     visibility: hidden;
   }
@@ -252,12 +243,10 @@
     visibility: visible;
   }
   
-  /* Cacher la barre d'outils à l'impression */
   .no-print {
     display: none !important;
   }
   
-  /* Réinitialiser le modal */
   .resume-modal {
     position: absolute;
     top: 0;
@@ -267,30 +256,32 @@
     overflow: visible;
   }
   
-  /* Page A4 sans ombres ni marges */
   .resume-page {
     box-shadow: none;
     margin: 0;
     max-width: 100%;
     padding: 0;
-    min-height: auto;
   }
   
-  /* Forcer les couleurs à l'impression */
-  * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  .resume-table {
+    page-break-inside: auto;
+  }
+  
+  .resume-table thead {
+    display: table-header-group;
+  }
+  
+  .resume-table tr {
+    page-break-inside: avoid;
   }
   
   @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 1.2cm;
   }
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+/* Responsive mobile */
 @media (max-width: 768px) {
   .resume-modal {
     padding: 8px;
@@ -298,7 +289,7 @@
   
   .resume-page {
     padding: 1cm;
-    min-height: auto;
+    font-size: 9pt;
   }
   
   .resume-toolbar {
@@ -307,12 +298,11 @@
     gap: 8px;
   }
   
-  .resume-stats {
-    gap: 8px;
-    padding: 12px;
+  .resume-table {
+    font-size: 8pt;
   }
   
-  .resume-stat-value {
-    font-size: 24px;
+  .col-statut {
+    display: none;
   }
 }

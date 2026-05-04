@@ -4,28 +4,27 @@ import { X, Printer } from 'lucide-react'
 import './Resume.css'
 
 const STATUT_LABELS = {
-  tracking_attente: 'Tracking en attente',
-  devis_a_faire: 'Devis à faire',
+  tracking_attente: 'Tracking',
+  devis_a_faire: 'Devis',
   suivi_marc: 'Suivi Marc',
-  attente_assurance: 'Attente assurance',
+  attente_assurance: 'Attente assu.',
   en_cours: 'En cours',
   termine: 'Terminé'
 }
 
-const PRIORITE_LABELS = {
-  haute: '🔴',
-  normal: '🟡',
-  basse: '🟢'
+const PRIORITE_SYMBOL = {
+  haute: '!',
+  normal: '•',
+  basse: '·'
 }
 
 export default function Resume({ dossiers, onClose }) {
-  // Trier les dossiers par urgence (couleur rouge en premier, puis amber, etc.)
+  // Trier par urgence
   const ordreUrgence = { red: 1, coral: 2, amber: 3, blue: 4, gray: 5, green: 6 }
-  const dossiersTriés = [...dossiers].sort((a, b) => {
-    return (ordreUrgence[a.couleur] || 99) - (ordreUrgence[b.couleur] || 99)
-  })
+  const dossiersAvecTaches = dossiers
+    .filter(d => d.taches?.some(t => !t.fait))
+    .sort((a, b) => (ordreUrgence[a.couleur] || 99) - (ordreUrgence[b.couleur] || 99))
 
-  // Stats globales
   const totalTaches = dossiers.reduce((acc, d) => 
     acc + (d.taches?.filter(t => !t.fait).length || 0), 0
   )
@@ -39,7 +38,6 @@ export default function Resume({ dossiers, onClose }) {
 
   return (
     <div className="resume-modal">
-      {/* Barre d'outils (cachée à l'impression) */}
       <div className="resume-toolbar no-print">
         <h2>Résumé des opérations</h2>
         <div className="resume-toolbar-actions">
@@ -53,76 +51,79 @@ export default function Resume({ dossiers, onClose }) {
         </div>
       </div>
 
-      {/* Page A4 */}
       <div className="resume-page">
-        {/* En-tête */}
+        {/* En-tête compact */}
         <div className="resume-header">
-          <div>
-            <h1 className="resume-title">Agreement Gréement</h1>
-            <p className="resume-subtitle">Résumé des opérations en cours</p>
+          <div className="resume-header-left">
+            <h1>Agreement Gréement — Opérations en cours</h1>
+            <div className="resume-meta">
+              {dossiersAvecTaches.length} dossiers actifs · {totalTaches} tâches · <strong>{tachesUrgentes} urgentes</strong>
+            </div>
           </div>
           <div className="resume-date">
-            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
+            {format(new Date(), 'd MMM yyyy', { locale: fr })}
           </div>
         </div>
 
-        {/* Stats globales */}
-        <div className="resume-stats">
-          <div className="resume-stat">
-            <div className="resume-stat-value">{dossiers.length}</div>
-            <div className="resume-stat-label">Dossiers actifs</div>
-          </div>
-          <div className="resume-stat urgent">
-            <div className="resume-stat-value">{tachesUrgentes}</div>
-            <div className="resume-stat-label">Tâches urgentes</div>
-          </div>
-          <div className="resume-stat">
-            <div className="resume-stat-value">{totalTaches}</div>
-            <div className="resume-stat-label">Tâches au total</div>
-          </div>
-        </div>
-
-        {/* Liste des dossiers */}
-        <div className="resume-dossiers">
-          {dossiersTriés.map(dossier => {
-            const tachesNonFaites = (dossier.taches || []).filter(t => !t.fait)
-            if (tachesNonFaites.length === 0) return null
-
-            return (
-              <div key={dossier.id} className={`resume-dossier dossier-color-${dossier.couleur}`}>
-                <div className="resume-dossier-header">
-                  <div>
-                    <div className="resume-dossier-name">{dossier.nom}</div>
-                    <div className="resume-dossier-info">
+        {/* Tableau compact des dossiers */}
+        <table className="resume-table">
+          <thead>
+            <tr>
+              <th className="col-priority"></th>
+              <th className="col-client">Client / Bateau</th>
+              <th className="col-statut">Statut</th>
+              <th className="col-taches">Tâches à réaliser</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dossiersAvecTaches.map(dossier => {
+              const tachesNonFaites = (dossier.taches || []).filter(t => !t.fait)
+              const aTacheUrgente = tachesNonFaites.some(t => t.priorite === 'haute')
+              
+              return (
+                <tr key={dossier.id} className={aTacheUrgente ? 'row-urgent' : ''}>
+                  <td className="col-priority">
+                    {aTacheUrgente && <span className="urgent-mark">●</span>}
+                  </td>
+                  <td className="col-client">
+                    <div className="client-name">{dossier.nom}</div>
+                    <div className="client-bateau">
                       {dossier.bateau}
                       {dossier.lieu && ` · ${dossier.lieu}`}
                     </div>
-                  </div>
-                  <div className={`resume-dossier-statut statut-${dossier.couleur}`}>
+                  </td>
+                  <td className="col-statut">
                     {STATUT_LABELS[dossier.statut] || dossier.statut}
-                  </div>
-                </div>
+                  </td>
+                  <td className="col-taches">
+                    <ul className="taches-list">
+                      {tachesNonFaites.map(tache => (
+                        <li key={tache.id} className={`tache-${tache.priorite}`}>
+                          <span className="tache-symbol">{PRIORITE_SYMBOL[tache.priorite]}</span>
+                          <span className="tache-text">
+                            {tache.texte}
+                            {tache.meta && <span className="tache-meta"> — {tache.meta}</span>}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
 
-                <ul className="resume-taches">
-                  {tachesNonFaites.map(tache => (
-                    <li key={tache.id} className={`resume-tache priorite-${tache.priorite}`}>
-                      <span className="resume-tache-priorite">{PRIORITE_LABELS[tache.priorite]}</span>
-                      <div className="resume-tache-content">
-                        <div className="resume-tache-text">{tache.texte}</div>
-                        {tache.meta && <div className="resume-tache-meta">{tache.meta}</div>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Pied de page */}
+        {/* Légende et pied de page */}
         <div className="resume-footer">
-          <div>Document généré automatiquement le {format(new Date(), 'd/MM/yyyy à HH:mm', { locale: fr })}</div>
-          <div>Agreement Gréement · Rémy Dubernet</div>
+          <div className="resume-legend">
+            <span><strong>!</strong> = Urgent</span>
+            <span><strong>•</strong> = Normal</span>
+            <span><strong>·</strong> = Basse priorité</span>
+          </div>
+          <div className="resume-footer-right">
+            Document généré le {format(new Date(), 'd/MM/yyyy à HH:mm', { locale: fr })} · Agreement Gréement
+          </div>
         </div>
       </div>
     </div>
