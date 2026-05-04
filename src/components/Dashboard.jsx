@@ -1,7 +1,8 @@
-import { useRef } from 'react'
-import { AlertCircle, Clock, CheckCircle2, FileText, ChevronRight, Mail, Anchor, MapPin, ListTodo, DollarSign } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { AlertCircle, Clock, CheckCircle2, FileText, ChevronRight, Mail, Anchor, MapPin, ListTodo, DollarSign, FileDown } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import Resume from './Resume'
 import './Dashboard.css'
 
 const STATUT_LABELS = {
@@ -22,6 +23,7 @@ const PRIORITE_COLORS = {
 export default function Dashboard({ dossiers, onSelectDossier, onChangeView, onOpenSidebar }) {
   const actionsRef = useRef(null)
   const devisRef = useRef(null)
+  const [showResume, setShowResume] = useState(false)
 
   // Stats
   const stats = {
@@ -68,12 +70,22 @@ export default function Dashboard({ dossiers, onSelectDossier, onChangeView, onO
 
   return (
     <div className="dashboard">
-      <div className="page-header">
-        <h1 className="page-title">Tableau de bord</h1>
-        <p className="page-subtitle">
-          {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
-        </p>
+      <div className="page-header dashboard-header">
+        <div>
+          <h1 className="page-title">Tableau de bord</h1>
+          <p className="page-subtitle">
+            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
+          </p>
+        </div>
+        <button className="btn-primary btn-resume" onClick={() => setShowResume(true)}>
+          <FileDown size={18} />
+          Résumé des opérations
+        </button>
       </div>
+
+      {showResume && (
+        <Resume dossiers={dossiers} onClose={() => setShowResume(false)} />
+      )}
 
       {/* Stats CLIQUABLES */}
       <div className="stats-grid">
